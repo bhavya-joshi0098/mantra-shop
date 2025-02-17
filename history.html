@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand">Business History</a>
+            <a href="dashboard.html" class="btn btn-light">Back to Dashboard</a>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h3>Save Business Data</h3>
+        <form id="historyForm">
+            <div class="mb-3">
+                <label class="form-label">Item Name</label>
+                <input type="text" class="form-control" id="itemName" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="itemDescription" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Price per Quantity</label>
+                <input type="number" class="form-control" id="pricePerQuantity" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Total Pieces</label>
+                <input type="number" class="form-control" id="totalPieces" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Final Amount (Auto Calculated)</label>
+                <input type="text" class="form-control" id="finalAmount" readonly>
+            </div>
+            <button type="submit" class="btn btn-success">Save</button>
+        </form>
+        <hr>
+        <h3>Saved Records</h3>
+        <ul id="historyList" class="list-group"></ul>
+    </div>
+    <!-- <script src="assets/history.js"></script> -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+    const historyForm = document.getElementById("historyForm");
+    const historyList = document.getElementById("historyList");
+
+    const pricePerQuantity = document.getElementById("pricePerQuantity");
+    const totalPieces = document.getElementById("totalPieces");
+    const finalAmount = document.getElementById("finalAmount");
+
+    // Automatically calculate final amount when inputs change
+    function calculateFinalAmount() {
+        const price = parseFloat(pricePerQuantity.value) || 0;
+        const pieces = parseInt(totalPieces.value) || 0;
+        finalAmount.value = (price * pieces).toFixed(2); // Ensuring 2 decimal places
+    }
+
+    pricePerQuantity.addEventListener("input", calculateFinalAmount);
+    totalPieces.addEventListener("input", calculateFinalAmount);
+
+    // Load existing history from localStorage
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem("businessHistory")) || [];
+        historyList.innerHTML = "";
+        history.forEach((item, index) => {
+            const listItem = document.createElement("li");
+            listItem.classList.add("list-group-item");
+            listItem.innerHTML = `
+                <strong>${item.name}</strong>: ${item.description} |
+                Price per Piece: $${item.pricePerQuantity} |
+                Total Pieces: ${item.totalPieces} |
+                <strong>Final Amount: $${item.finalAmount}</strong> 
+                <button class="btn btn-danger btn-sm float-end" onclick="deleteRecord(${index})">Delete</button>`;
+            historyList.appendChild(listItem);
+        });
+    }
+
+    // Save new record
+    historyForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const itemName = document.getElementById("itemName").value;
+        const itemDescription = document.getElementById("itemDescription").value;
+        const price = parseFloat(pricePerQuantity.value);
+        const pieces = parseInt(totalPieces.value);
+        const finalPrice = parseFloat(finalAmount.value);
+
+        const newRecord = { 
+            name: itemName, 
+            description: itemDescription, 
+            pricePerQuantity: price, 
+            totalPieces: pieces, 
+            finalAmount: finalPrice 
+        };
+
+        const history = JSON.parse(localStorage.getItem("businessHistory")) || [];
+        history.push(newRecord);
+        localStorage.setItem("businessHistory", JSON.stringify(history));
+
+        historyForm.reset();
+        finalAmount.value = ""; // Clear calculated value
+        loadHistory();
+    });
+
+    // Delete record
+    window.deleteRecord = function (index) {
+        const history = JSON.parse(localStorage.getItem("businessHistory")) || [];
+        history.splice(index, 1);
+        localStorage.setItem("businessHistory", JSON.stringify(history));
+        loadHistory();
+    };
+
+    loadHistory();
+});
+
+    </script>
+</body>
+</html>
